@@ -142,3 +142,50 @@ Copyright © 2018 Cayetano Benavent - Geographica (Python3 binding; more functio
 Copyright © 2016 Daniel J. Hofmann (Creator of libosrmc project)
 
 Distributed under the MIT License (MIT).
+
+
+
+---
+
+
+
+#### Build
+
+##### Prerequisites
+
+libosrm 5.22 version
+
+#### 
+
+```
+make
+sudo make install
+sudo ldconfig
+make clean
+
+```
+
+#### Check for .so file
+
+```
+ls /usr/local/lib/
+```
+
+
+
+### Python
+
+#### Build
+
+```
+sudo apt-get install python3-setuptools
+sudo apt install python3-pip
+python3 -m pip install .
+```
+
+#### Run
+
+```
+LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python3 osrm_python3_route.py /mnt/fd68f224-e30e-4ea0-8bd8-7f2a4c4d5ab0/nurgasemetey-environment/geo-data/turkey2/turkey-latest.osrm
+```
+

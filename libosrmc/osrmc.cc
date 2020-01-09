@@ -462,11 +462,57 @@ void osrmc_nearest_response_coordinates(osrmc_nearest_response_t response, float
 
 osrmc_match_params_t osrmc_match_params_construct(osrmc_error_t* error) try {
   auto* out = new osrm::MatchParameters;
+  out->overview = osrm::RouteParameters::OverviewType::Full;
+  out->steps = false;
+  out->gaps = osrm::MatchParameters::GapsType::Ignore;
+  out->annotations_type = osrm::RouteParameters::AnnotationsType::All;
+  out->tidy = false;
   return reinterpret_cast<osrmc_match_params_t>(out);
 } catch (const std::exception& e) {
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
+
+osrmc_match_response_t osrmc_match(osrmc_osrm_t osrm, osrmc_match_params_t params, osrmc_error_t* error) try {
+  auto* osrm_typed = reinterpret_cast<osrm::OSRM*>(osrm);
+  auto* params_typed = reinterpret_cast<osrm::MatchParameters*>(params);
+
+  auto* out = new osrm::json::Object;
+  const auto status = osrm_typed->Match(*params_typed, *out);
+  std::cout << "size: " << params_typed->coordinates.size() << std::endl;
+  if (status == osrm::Status::Ok) {
+    auto &matchings = out->values["matchings"].get<osrm::json::Array>();
+    auto &first_match = matchings.values.at(0).get<osrm::json::Object>();
+    const auto confidence = first_match.values["confidence"].get<osrm::json::Number>().value;
+    std::cout << "confidence" << confidence << std::endl;    
+    return reinterpret_cast<osrmc_match_response_t>(out);
+  }
+  *error = new osrmc_error{"service request failed"};
+  return nullptr;
+} catch (const std::exception& e) {
+  *error = new osrmc_error{e.what()};
+  return nullptr;
+}
+
+//osrmc_nearest_response_t response, float* coords, osrmc_error_t* error
+void osrmc_match_get_nodes(osrmc_match_response_t response, osrmc_error_t* error) try {
+  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+  auto &matchings = response_typed->values["matchings"].get<osrm::json::Array>().values;
+
+  for (const auto& matching : matchings) {
+    const auto &matching_object = matching.get<osrm::json::Object>();
+    const auto &legs = matching_object.values["legs"].get<osrm::json::Array>().values;
+    for(const auto& leg: legs) {
+      const auto &leg_object = leg.get<osrm::json::Object>();
+      const auto &annotation = leg_object.values["annotation"].get<osrm::json::Object>();
+      const auto &nodes = annotation.values["nodes"].get<osrm::json::Array>().values;
+
+    }
+  }
+} catch (const std::exception& e) {
+  *error = new osrmc_error{e.what()};
+}
+
 
 void osrmc_match_params_destruct(osrmc_match_params_t params) {
   delete reinterpret_cast<osrm::MatchParameters*>(params);

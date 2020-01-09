@@ -166,6 +166,18 @@ lib.osrmc_nearest_response_coordinates.restype = c.c_void_p
 lib.osrmc_nearest_response_coordinates.argtypes = [c.c_void_p, c.c_float * 2, c.c_void_p]
 lib.osrmc_nearest_response_coordinates.errcheck = osrmc_error_errcheck
 
+# Match
+lib.osrmc_match_params_construct.restype = c.c_void_p
+lib.osrmc_match_params_construct.argtypes = [c.c_void_p]
+lib.osrmc_match_params_construct.errcheck = osrmc_error_errcheck
+
+lib.osrmc_match.restype = c.c_void_p
+lib.osrmc_match.argtypes = [c.c_void_p, c.c_void_p, c.c_void_p]
+lib.osrmc_match.errcheck = osrmc_error_errcheck
+
+
+lib.osrmc_match_params_destruct.restype = None
+lib.osrmc_match_params_destruct.argtypes = [c.c_void_p]
 
 # Python Library Interface
 @contextmanager
@@ -194,6 +206,18 @@ def scoped_route(osrm, params):
     route = lib.osrmc_route(osrm, params, c.byref(osrmc_error()))
     yield route
     lib.osrmc_route_response_destruct(route)
+
+@contextmanager
+def scoped_match_params():
+    params = lib.osrmc_match_params_construct(c.byref(osrmc_error()))
+    yield params
+    lib.osrmc_match_params_destruct(params)
+
+@contextmanager
+def scoped_match(osrm, params):
+    match = lib.osrmc_match(osrm, params, c.byref(osrmc_error()))
+    yield match
+    lib.osrmc_route_response_destruct(match)
 
 
 @contextmanager
@@ -226,6 +250,7 @@ def scoped_nearest(osrm, params):
 
 Coordinate = namedtuple('Coordinate', 'id longitude latitude')
 Route = namedtuple('Route', 'distance duration geometry')
+Match = namedtuple('Match', 'first')
 Table = list
 
 
@@ -245,6 +270,18 @@ class OSRM:
             lib.osrmc_osrm_destruct(self.osrm)
         if self.config:
             lib.osrmc_config_destruct(self.config)
+
+    def match(self, coordinates) :
+        with scoped_match_params() as params:
+            print(params)
+            for coordinate in coordinates:
+                lib.osrmc_params_add_coordinate(params, coordinate.longitude, coordinate.latitude, c.byref(osrmc_error()))
+            with scoped_match(self.osrm, params) as match:
+                if match:
+                    print("matched")
+
+                else:
+                    print("error")
 
     def route(self, coordinates, csv_path=None, full_geom=True, continue_straight=True):
         with scoped_route_params() as params:
