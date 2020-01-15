@@ -1,4 +1,4 @@
 make
-make install
-ldconfig
+sudo make install
+sudo ldconfig
 make clean

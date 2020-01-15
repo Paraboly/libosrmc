@@ -57,76 +57,85 @@ int osrmc_is_abi_compatible(void) { return osrmc_get_version() >> 16u == OSRMC_V
 
 /* Error handling */
 
-struct osrmc_error final {
+struct osrmc_error final
+{
   std::string message;
 };
 
-const char* osrmc_error_message(osrmc_error_t error) { return error->message.c_str(); }
+const char *osrmc_error_message(osrmc_error_t error) { return error->message.c_str(); }
 
 void osrmc_error_destruct(osrmc_error_t error) { delete error; }
 
-
 /* Config and osrmc */
 
-osrmc_config_t osrmc_config_construct(const char* base_path, const bool contraction, osrmc_error_t* error) try {
-  auto* out = new osrm::EngineConfig;
+osrmc_config_t osrmc_config_construct(const char *base_path, const bool contraction, osrmc_error_t *error) try
+{
+  auto *out = new osrm::EngineConfig;
 
   if (base_path)
   {
-      out->storage_config = osrm::StorageConfig(base_path);
-      out->use_shared_memory = false;
+    out->storage_config = osrm::StorageConfig(base_path);
+    out->use_shared_memory = false;
   }
   else
   {
-      out->use_shared_memory = true;
+    out->use_shared_memory = true;
   }
 
   if (contraction)
   {
-      out->algorithm = osrm::EngineConfig::Algorithm::CH;
+    out->algorithm = osrm::EngineConfig::Algorithm::CH;
   }
   else
   {
-      out->algorithm = osrm::EngineConfig::Algorithm::MLD;
+    out->algorithm = osrm::EngineConfig::Algorithm::MLD;
   }
 
   return reinterpret_cast<osrmc_config_t>(out);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_config_destruct(osrmc_config_t config) { delete reinterpret_cast<osrm::EngineConfig*>(config); }
+void osrmc_config_destruct(osrmc_config_t config) { delete reinterpret_cast<osrm::EngineConfig *>(config); }
 
-osrmc_osrm_t osrmc_osrm_construct(osrmc_config_t config, osrmc_error_t* error) try {
-  auto* config_typed = reinterpret_cast<osrm::EngineConfig*>(config);
-  auto* out = new osrm::OSRM(*config_typed);
+osrmc_osrm_t osrmc_osrm_construct(osrmc_config_t config, osrmc_error_t *error) try
+{
+  auto *config_typed = reinterpret_cast<osrm::EngineConfig *>(config);
+  auto *out = new osrm::OSRM(*config_typed);
 
   return reinterpret_cast<osrmc_osrm_t>(out);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_osrm_destruct(osrmc_osrm_t osrm) { delete reinterpret_cast<osrm::OSRM*>(osrm); }
-
+void osrmc_osrm_destruct(osrmc_osrm_t osrm) { delete reinterpret_cast<osrm::OSRM *>(osrm); }
 
 /* Generic parameters */
 
-void osrmc_params_add_coordinate(osrmc_params_t params, float longitude, float latitude, osrmc_error_t* error) try {
-  auto* params_typed = reinterpret_cast<osrm::engine::api::BaseParameters*>(params);
+void osrmc_params_add_coordinate(osrmc_params_t params, float longitude, float latitude, osrmc_error_t *error) try
+{
+  auto *params_typed = reinterpret_cast<osrm::engine::api::BaseParameters *>(params);
 
   auto longitude_typed = osrm::util::FloatLongitude{longitude};
   auto latitude_typed = osrm::util::FloatLatitude{latitude};
 
   params_typed->coordinates.emplace_back(std::move(longitude_typed), std::move(latitude_typed));
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
 void osrmc_params_add_coordinate_with(osrmc_params_t params, float longitude, float latitude, float radius, int bearing,
-                                      int range, osrmc_error_t* error) try {
-  auto* params_typed = reinterpret_cast<osrm::engine::api::BaseParameters*>(params);
+                                      int range, osrmc_error_t *error) try
+{
+  auto *params_typed = reinterpret_cast<osrm::engine::api::BaseParameters *>(params);
 
   auto longitude_typed = osrm::util::FloatLongitude{longitude};
   auto latitude_typed = osrm::util::FloatLatitude{latitude};
@@ -136,46 +145,58 @@ void osrmc_params_add_coordinate_with(osrmc_params_t params, float longitude, fl
   params_typed->coordinates.emplace_back(std::move(longitude_typed), std::move(latitude_typed));
   params_typed->radiuses.emplace_back(radius);
   params_typed->bearings.emplace_back(std::move(bearing_typed));
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
-void osrmc_params_exclude(osrmc_params_t params, const char* excluded_class, osrmc_error_t* error) try {
-  auto* params_typed = reinterpret_cast<osrm::engine::api::BaseParameters*>(params);
+void osrmc_params_exclude(osrmc_params_t params, const char *excluded_class, osrmc_error_t *error) try
+{
+  auto *params_typed = reinterpret_cast<osrm::engine::api::BaseParameters *>(params);
 
   params_typed->exclude.emplace_back(std::move(excluded_class));
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
 /* Route service */
 
-osrmc_route_params_t osrmc_route_params_construct(osrmc_error_t* error) try {
-  auto* out = new osrm::RouteParameters;
+osrmc_route_params_t osrmc_route_params_construct(osrmc_error_t *error) try
+{
+  auto *out = new osrm::RouteParameters;
   out->geometries = osrm::RouteParameters::GeometriesType::Polyline;
 
   return reinterpret_cast<osrmc_route_params_t>(out);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_route_params_destruct(osrmc_route_params_t params) {
-  delete reinterpret_cast<osrm::RouteParameters*>(params);
+void osrmc_route_params_destruct(osrmc_route_params_t params)
+{
+  delete reinterpret_cast<osrm::RouteParameters *>(params);
 }
 
-void osrmc_route_params_add_steps(osrmc_route_params_t params, int on) {
-  auto* params_typed = reinterpret_cast<osrm::RouteParameters*>(params);
+void osrmc_route_params_add_steps(osrmc_route_params_t params, int on)
+{
+  auto *params_typed = reinterpret_cast<osrm::RouteParameters *>(params);
   params_typed->steps = on;
 }
 
-void osrmc_route_params_add_continue_straight(osrmc_route_params_t params, int on) {
-  auto* params_typed = reinterpret_cast<osrm::RouteParameters*>(params);
+void osrmc_route_params_add_continue_straight(osrmc_route_params_t params, int on)
+{
+  auto *params_typed = reinterpret_cast<osrm::RouteParameters *>(params);
   params_typed->continue_straight = on;
 }
 
-void osrmc_route_params_add_overview_full(osrmc_route_params_t params, int on) {
-  auto* params_typed = reinterpret_cast<osrm::RouteParameters*>(params);
+void osrmc_route_params_add_overview_full(osrmc_route_params_t params, int on)
+{
+  auto *params_typed = reinterpret_cast<osrm::RouteParameters *>(params);
 
   if (on)
   {
@@ -187,16 +208,18 @@ void osrmc_route_params_add_overview_full(osrmc_route_params_t params, int on) {
   }
 }
 
-void osrmc_route_params_add_alternatives(osrmc_route_params_t params, int on) {
-  auto* params_typed = reinterpret_cast<osrm::RouteParameters*>(params);
+void osrmc_route_params_add_alternatives(osrmc_route_params_t params, int on)
+{
+  auto *params_typed = reinterpret_cast<osrm::RouteParameters *>(params);
   params_typed->alternatives = on;
 }
 
-osrmc_route_response_t osrmc_route(osrmc_osrm_t osrm, osrmc_route_params_t params, osrmc_error_t* error) try {
-  auto* osrm_typed = reinterpret_cast<osrm::OSRM*>(osrm);
-  auto* params_typed = reinterpret_cast<osrm::RouteParameters*>(params);
+osrmc_route_response_t osrmc_route(osrmc_osrm_t osrm, osrmc_route_params_t params, osrmc_error_t *error) try
+{
+  auto *osrm_typed = reinterpret_cast<osrm::OSRM *>(osrm);
+  auto *params_typed = reinterpret_cast<osrm::RouteParameters *>(params);
 
-  auto* out = new osrm::json::Object;
+  auto *out = new osrm::json::Object;
   const auto status = osrm_typed->Route(*params_typed, *out);
 
   if (status == osrm::Status::Ok)
@@ -204,88 +227,106 @@ osrmc_route_response_t osrmc_route(osrmc_osrm_t osrm, osrmc_route_params_t param
 
   *error = new osrmc_error{"service request failed"};
   return nullptr;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_route_with(osrmc_osrm_t osrm, osrmc_route_params_t params, osrmc_waypoint_handler_t handler, void* data,
-                      osrmc_error_t* error) try {
-  auto* osrm_typed = reinterpret_cast<osrm::OSRM*>(osrm);
-  auto* params_typed = reinterpret_cast<osrm::RouteParameters*>(params);
+void osrmc_route_with(osrmc_osrm_t osrm, osrmc_route_params_t params, osrmc_waypoint_handler_t handler, void *data,
+                      osrmc_error_t *error) try
+{
+  auto *osrm_typed = reinterpret_cast<osrm::OSRM *>(osrm);
+  auto *params_typed = reinterpret_cast<osrm::RouteParameters *>(params);
 
   osrm::json::Object result;
   const auto status = osrm_typed->Route(*params_typed, result);
 
-  if (status != osrm::Status::Ok) {
+  if (status != osrm::Status::Ok)
+  {
     *error = new osrmc_error{"service request failed"};
     return;
   }
 
-  const auto& waypoints = result.values.at("waypoints").get<osrm::json::Array>().values;
+  const auto &waypoints = result.values.at("waypoints").get<osrm::json::Array>().values;
 
-  for (const auto& waypoint : waypoints) {
-    const auto& waypoint_typed = waypoint.get<osrm::json::Object>();
-    const auto& location = waypoint_typed.values.at("location").get<osrm::json::Array>().values;
+  for (const auto &waypoint : waypoints)
+  {
+    const auto &waypoint_typed = waypoint.get<osrm::json::Object>();
+    const auto &location = waypoint_typed.values.at("location").get<osrm::json::Array>().values;
 
-    const auto& name = waypoint_typed.values.at("name").get<osrm::json::String>().value;
+    const auto &name = waypoint_typed.values.at("name").get<osrm::json::String>().value;
     const auto longitude = location[0].get<osrm::json::Number>().value;
     const auto latitude = location[1].get<osrm::json::Number>().value;
 
     (void)handler(data, name.c_str(), longitude, latitude);
   }
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
-void osrmc_route_response_destruct(osrmc_route_response_t response) {
-  delete reinterpret_cast<osrm::json::Object*>(response);
+void osrmc_route_response_destruct(osrmc_route_response_t response)
+{
+  delete reinterpret_cast<osrm::json::Object *>(response);
 }
 
-float osrmc_route_response_distance(osrmc_route_response_t response, osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+float osrmc_route_response_distance(osrmc_route_response_t response, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
 
-  auto& routes = response_typed->values["routes"].get<osrm::json::Array>();
-  auto& route = routes.values.at(0).get<osrm::json::Object>();
+  auto &routes = response_typed->values["routes"].get<osrm::json::Array>();
+  auto &route = routes.values.at(0).get<osrm::json::Object>();
 
   const auto distance = route.values["distance"].get<osrm::json::Number>().value;
   return distance;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return INFINITY;
 }
 
-float osrmc_route_response_duration(osrmc_route_response_t response, osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+float osrmc_route_response_duration(osrmc_route_response_t response, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
 
-  auto& routes = response_typed->values["routes"].get<osrm::json::Array>();
-  auto& route = routes.values.at(0).get<osrm::json::Object>();
+  auto &routes = response_typed->values["routes"].get<osrm::json::Array>();
+  auto &route = routes.values.at(0).get<osrm::json::Object>();
 
   const auto duration = route.values["duration"].get<osrm::json::Number>().value;
   return duration;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return INFINITY;
 }
 
-const char* osrmc_route_response_geometry(osrmc_route_response_t response, osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
-  auto& routes = response_typed->values["routes"].get<osrm::json::Array>();
-  auto& route = routes.values.at(0).get<osrm::json::Object>();
+const char *osrmc_route_response_geometry(osrmc_route_response_t response, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
+  auto &routes = response_typed->values["routes"].get<osrm::json::Array>();
+  auto &route = routes.values.at(0).get<osrm::json::Object>();
   const auto geometry = route.values["geometry"].get<osrm::json::String>().value;
 
-  char* geom_out = new char [geometry.length() + 1];
+  char *geom_out = new char[geometry.length() + 1];
   strcpy(geom_out, geometry.c_str());
   return geom_out;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_route_response_geometry_legs(osrmc_route_response_t response, const char* base_path, osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
-  auto& routes = response_typed->values["routes"].get<osrm::json::Array>();
-  auto& route = routes.values.at(0).get<osrm::json::Object>();
+void osrmc_route_response_geometry_legs(osrmc_route_response_t response, const char *base_path, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
+  auto &routes = response_typed->values["routes"].get<osrm::json::Array>();
+  auto &route = routes.values.at(0).get<osrm::json::Object>();
   const auto geometry = route.values["geometry"].get<osrm::json::String>().value;
   const auto &legs = route.values["legs"].get<osrm::json::Array>().values;
 
@@ -294,64 +335,75 @@ void osrmc_route_response_geometry_legs(osrmc_route_response_t response, const c
 
   for (const auto &leg : legs)
   {
-      const auto &leg_object = leg.get<osrm::json::Object>();
-      const auto &steps = leg_object.values.at("steps").get<osrm::json::Array>().values;
+    const auto &leg_object = leg.get<osrm::json::Object>();
+    const auto &steps = leg_object.values.at("steps").get<osrm::json::Array>().values;
 
-      int step_ct = 0;
+    int step_ct = 0;
 
-      for (const auto &step : steps)
-      {
-          const auto &step_object = step.get<osrm::json::Object>();
-          const auto step_dist = step_object.values.at("distance").get<osrm::json::Number>().value;
-          const auto step_dur = step_object.values.at("duration").get<osrm::json::Number>().value;
-          const auto step_geom = step_object.values.at("geometry").get<osrm::json::String>().value;
+    for (const auto &step : steps)
+    {
+      const auto &step_object = step.get<osrm::json::Object>();
+      const auto step_dist = step_object.values.at("distance").get<osrm::json::Number>().value;
+      const auto step_dur = step_object.values.at("duration").get<osrm::json::Number>().value;
+      const auto step_geom = step_object.values.at("geometry").get<osrm::json::String>().value;
 
-          pFile << step_ct << "," << step_dist << "," << step_dur << "," << step_geom << std::endl;
+      pFile << step_ct << "," << step_dist << "," << step_dur << "," << step_geom << std::endl;
 
-          ++step_ct;
-      }
+      ++step_ct;
+    }
   }
   pFile.close();
-
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
-
 /* Table service */
 
-osrmc_table_params_t osrmc_table_params_construct(osrmc_error_t* error) try {
-  auto* out = new osrm::TableParameters;
+osrmc_table_params_t osrmc_table_params_construct(osrmc_error_t *error) try
+{
+  auto *out = new osrm::TableParameters;
   out->annotations = osrm::TableParameters::AnnotationsType::All;
   return reinterpret_cast<osrmc_table_params_t>(out);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_table_params_destruct(osrmc_table_params_t params) {
-  delete reinterpret_cast<osrm::TableParameters*>(params);
+void osrmc_table_params_destruct(osrmc_table_params_t params)
+{
+  delete reinterpret_cast<osrm::TableParameters *>(params);
 }
 
-void osrmc_table_params_add_source(osrmc_table_params_t params, size_t index, osrmc_error_t* error) try {
-  auto* params_typed = reinterpret_cast<osrm::TableParameters*>(params);
+void osrmc_table_params_add_source(osrmc_table_params_t params, size_t index, osrmc_error_t *error) try
+{
+  auto *params_typed = reinterpret_cast<osrm::TableParameters *>(params);
   params_typed->sources.emplace_back(index);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
-void osrmc_table_params_add_destination(osrmc_table_params_t params, size_t index, osrmc_error_t* error) try {
-  auto* params_typed = reinterpret_cast<osrm::TableParameters*>(params);
+void osrmc_table_params_add_destination(osrmc_table_params_t params, size_t index, osrmc_error_t *error) try
+{
+  auto *params_typed = reinterpret_cast<osrm::TableParameters *>(params);
   params_typed->destinations.emplace_back(index);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
-osrmc_table_response_t osrmc_table(osrmc_osrm_t osrm, osrmc_table_params_t params, osrmc_error_t* error) try {
-  auto* osrm_typed = reinterpret_cast<osrm::OSRM*>(osrm);
-  auto* params_typed = reinterpret_cast<osrm::TableParameters*>(params);
+osrmc_table_response_t osrmc_table(osrmc_osrm_t osrm, osrmc_table_params_t params, osrmc_error_t *error) try
+{
+  auto *osrm_typed = reinterpret_cast<osrm::OSRM *>(osrm);
+  auto *params_typed = reinterpret_cast<osrm::TableParameters *>(params);
 
-  auto* out = new osrm::json::Object;
+  auto *out = new osrm::json::Object;
   const auto status = osrm_typed->Table(*params_typed, *out);
 
   if (status == osrm::Status::Ok)
@@ -359,64 +411,77 @@ osrmc_table_response_t osrmc_table(osrmc_osrm_t osrm, osrmc_table_params_t param
 
   *error = new osrmc_error{"service request failed"};
   return nullptr;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_table_response_destruct(osrmc_table_response_t response) {
-  delete reinterpret_cast<osrm::json::Object*>(response);
+void osrmc_table_response_destruct(osrmc_table_response_t response)
+{
+  delete reinterpret_cast<osrm::json::Object *>(response);
 }
 
 float osrmc_table_response_duration(osrmc_table_response_t response, unsigned long from, unsigned long to,
-                                    osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+                                    osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
 
-  auto& durations = response_typed->values["durations"].get<osrm::json::Array>();
-  auto& durations_from_to_all = durations.values.at(from).get<osrm::json::Array>();
+  auto &durations = response_typed->values["durations"].get<osrm::json::Array>();
+  auto &durations_from_to_all = durations.values.at(from).get<osrm::json::Array>();
   auto duration = durations_from_to_all.values.at(to).get<osrm::json::Number>().value;
 
   return duration;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return INFINITY;
 }
 
 float osrmc_table_response_distance(osrmc_table_response_t response, unsigned long from, unsigned long to,
-                                    osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+                                    osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
 
-  auto& distances = response_typed->values["distances"].get<osrm::json::Array>();
-  auto& distances_from_to_all = distances.values.at(from).get<osrm::json::Array>();
+  auto &distances = response_typed->values["distances"].get<osrm::json::Array>();
+  auto &distances_from_to_all = distances.values.at(from).get<osrm::json::Array>();
   auto distance = distances_from_to_all.values.at(to).get<osrm::json::Number>().value;
 
   return distance;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return INFINITY;
 }
 
-
 /* Nearest service */
 
-osrmc_nearest_params_t osrmc_nearest_params_construct(osrmc_error_t* error) try {
-  auto* out = new osrm::NearestParameters;
+osrmc_nearest_params_t osrmc_nearest_params_construct(osrmc_error_t *error) try
+{
+  auto *out = new osrm::NearestParameters;
   return reinterpret_cast<osrmc_nearest_params_t>(out);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_nearest_params_destruct(osrmc_nearest_params_t params) {
-  delete reinterpret_cast<osrm::NearestParameters*>(params);
+void osrmc_nearest_params_destruct(osrmc_nearest_params_t params)
+{
+  delete reinterpret_cast<osrm::NearestParameters *>(params);
 }
 
 osrmc_nearest_response_t osrmc_nearest(osrmc_osrm_t osrm, osrmc_nearest_params_t params,
-                                       osrmc_error_t* error) try {
-  auto* osrm_typed = reinterpret_cast<osrm::OSRM*>(osrm);
-  auto* params_typed = reinterpret_cast<osrm::NearestParameters*>(params);
+                                       osrmc_error_t *error) try
+{
+  auto *osrm_typed = reinterpret_cast<osrm::OSRM *>(osrm);
+  auto *params_typed = reinterpret_cast<osrm::NearestParameters *>(params);
 
-  auto* out = new osrm::json::Object;
+  auto *out = new osrm::json::Object;
   const auto status = osrm_typed->Nearest(*params_typed, *out);
 
   if (status == osrm::Status::Ok)
@@ -424,28 +489,34 @@ osrmc_nearest_response_t osrmc_nearest(osrmc_osrm_t osrm, osrmc_nearest_params_t
 
   *error = new osrmc_error{"service request failed"};
   return nullptr;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-void osrmc_nearest_response_destruct(osrmc_nearest_response_t response) {
-  delete reinterpret_cast<osrm::json::Object*>(response);
+void osrmc_nearest_response_destruct(osrmc_nearest_response_t response)
+{
+  delete reinterpret_cast<osrm::json::Object *>(response);
 }
 
-void osrmc_nearest_set_number_of_results(osrmc_nearest_params_t params, unsigned n) {
-  auto* params_typed = reinterpret_cast<osrm::NearestParameters*>(params);
+void osrmc_nearest_set_number_of_results(osrmc_nearest_params_t params, unsigned n)
+{
+  auto *params_typed = reinterpret_cast<osrm::NearestParameters *>(params);
   params_typed->number_of_results = n;
 }
 
-void osrmc_nearest_response_coordinates(osrmc_nearest_response_t response, float* coords, osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+void osrmc_nearest_response_coordinates(osrmc_nearest_response_t response, float *coords, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
 
-  const auto& waypoints = response_typed->values["waypoints"].get<osrm::json::Array>().values;
+  const auto &waypoints = response_typed->values["waypoints"].get<osrm::json::Array>().values;
 
-  for (const auto& waypoint : waypoints) {
-    const auto& waypoint_typed = waypoint.get<osrm::json::Object>();
-    const auto& location = waypoint_typed.values.at("location").get<osrm::json::Array>().values;
+  for (const auto &waypoint : waypoints)
+  {
+    const auto &waypoint_typed = waypoint.get<osrm::json::Object>();
+    const auto &location = waypoint_typed.values.at("location").get<osrm::json::Array>().values;
 
     const auto longitude = location[0].get<osrm::json::Number>().value;
     const auto latitude = location[1].get<osrm::json::Number>().value;
@@ -453,74 +524,130 @@ void osrmc_nearest_response_coordinates(osrmc_nearest_response_t response, float
     coords[0] = latitude;
     coords[1] = longitude;
   }
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
-
 /* Match service */
 
-osrmc_match_params_t osrmc_match_params_construct(osrmc_error_t* error) try {
-  auto* out = new osrm::MatchParameters;
+osrmc_match_params_t osrmc_match_params_construct(osrmc_error_t *error) try
+{
+  auto *out = new osrm::MatchParameters;
   out->overview = osrm::RouteParameters::OverviewType::Full;
   out->steps = false;
   out->gaps = osrm::MatchParameters::GapsType::Ignore;
   out->annotations_type = osrm::RouteParameters::AnnotationsType::All;
   out->tidy = false;
   return reinterpret_cast<osrmc_match_params_t>(out);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
-osrmc_match_response_t osrmc_match(osrmc_osrm_t osrm, osrmc_match_params_t params, osrmc_error_t* error) try {
-  auto* osrm_typed = reinterpret_cast<osrm::OSRM*>(osrm);
-  auto* params_typed = reinterpret_cast<osrm::MatchParameters*>(params);
+osrmc_match_response_t osrmc_match(osrmc_osrm_t osrm, osrmc_match_params_t params, osrmc_error_t *error) try
+{
+  auto *osrm_typed = reinterpret_cast<osrm::OSRM *>(osrm);
+  auto *params_typed = reinterpret_cast<osrm::MatchParameters *>(params);
 
-  auto* out = new osrm::json::Object;
+  auto *out = new osrm::json::Object;
   const auto status = osrm_typed->Match(*params_typed, *out);
   std::cout << "size: " << params_typed->coordinates.size() << std::endl;
-  if (status == osrm::Status::Ok) {
+  if (status == osrm::Status::Ok)
+  {
     auto &matchings = out->values["matchings"].get<osrm::json::Array>();
     auto &first_match = matchings.values.at(0).get<osrm::json::Object>();
     const auto confidence = first_match.values["confidence"].get<osrm::json::Number>().value;
-    std::cout << "confidence" << confidence << std::endl;    
+    std::cout << "confidence" << confidence << std::endl;
     return reinterpret_cast<osrmc_match_response_t>(out);
   }
   *error = new osrmc_error{"service request failed"};
   return nullptr;
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
   return nullptr;
 }
 
 //osrmc_nearest_response_t response, float* coords, osrmc_error_t* error
-void osrmc_match_get_nodes(osrmc_match_response_t response, osrmc_error_t* error) try {
-  auto* response_typed = reinterpret_cast<osrm::json::Object*>(response);
+void osrmc_match_get_nodes(osrmc_match_response_t response, double *node_arr, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
   auto &matchings = response_typed->values["matchings"].get<osrm::json::Array>().values;
-
-  for (const auto& matching : matchings) {
+  int counter = 0;
+  for (const auto &matching : matchings)
+  {
     const auto &matching_object = matching.get<osrm::json::Object>();
-    const auto &legs = matching_object.values["legs"].get<osrm::json::Array>().values;
-    for(const auto& leg: legs) {
+    const auto &legs = matching_object.values.at("legs").get<osrm::json::Array>().values;
+    for (const auto &leg : legs)
+    {
       const auto &leg_object = leg.get<osrm::json::Object>();
-      const auto &annotation = leg_object.values["annotation"].get<osrm::json::Object>();
-      const auto &nodes = annotation.values["nodes"].get<osrm::json::Array>().values;
-
+      const auto &annotation = leg_object.values.at("annotation").get<osrm::json::Object>();
+      const auto &nodes = annotation.values.at("nodes").get<osrm::json::Array>().values;
+      for(const auto &node: nodes) {
+        node_arr[counter] = node.get<osrm::json::Number>().value;
+        counter = counter + 1;
+      }
     }
   }
-} catch (const std::exception& e) {
+  std::cout <<"-------------------"<<std::endl;
+  for (int i = 0; i < counter; i++)
+  {
+    std::cout<<std::fixed<<node_arr[i] << std::endl;
+  }
+  
+  std::cout<<"Count " << counter << std::endl;
+
+}
+catch (const std::exception &e)
+{
+  *error = new osrmc_error{e.what()};
+}
+
+//osrmc_nearest_response_t response, float* coords, osrmc_error_t* error
+int osrmc_match_get_node_count(osrmc_match_response_t response, osrmc_error_t *error) try
+{
+  auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
+  auto &matchings = response_typed->values["matchings"].get<osrm::json::Array>().values;
+  int counter = 0;
+  for (const auto &matching : matchings)
+  {
+    const auto &matching_object = matching.get<osrm::json::Object>();
+    const auto &legs = matching_object.values.at("legs").get<osrm::json::Array>().values;
+    for (const auto &leg : legs)
+    {
+      const auto &leg_object = leg.get<osrm::json::Object>();
+      const auto &annotation = leg_object.values.at("annotation").get<osrm::json::Object>();
+      const auto &nodes = annotation.values.at("nodes").get<osrm::json::Array>().values;
+      for(const auto &node: nodes) {
+        counter = counter + 1;
+      }
+    }
+  }
+  std::cout<<"Count " << counter << std::endl;
+  return counter;
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
 
 
-void osrmc_match_params_destruct(osrmc_match_params_t params) {
-  delete reinterpret_cast<osrm::MatchParameters*>(params);
+void osrmc_match_params_destruct(osrmc_match_params_t params)
+{
+  delete reinterpret_cast<osrm::MatchParameters *>(params);
 }
 
-void osrmc_match_params_add_timestamp(osrmc_match_params_t params, unsigned timestamp, osrmc_error_t* error) try {
-  auto* params_typed = reinterpret_cast<osrm::MatchParameters*>(params);
+void osrmc_match_params_add_timestamp(osrmc_match_params_t params, unsigned timestamp, osrmc_error_t *error) try
+{
+  auto *params_typed = reinterpret_cast<osrm::MatchParameters *>(params);
   params_typed->timestamps.emplace_back(timestamp);
-} catch (const std::exception& e) {
+}
+catch (const std::exception &e)
+{
   *error = new osrmc_error{e.what()};
 }
