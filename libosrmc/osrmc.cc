@@ -44,7 +44,7 @@ THE SOFTWARE.
 #include <osrm/match_parameters.hpp>
 #include <osrm/status.hpp>
 #include <osrm/storage_config.hpp>
-
+#include <set>
 #include "osrmc.h"
 
 /** ABI stability **/
@@ -555,13 +555,13 @@ osrmc_match_response_t osrmc_match(osrmc_osrm_t osrm, osrmc_match_params_t param
 
   auto *out = new osrm::json::Object;
   const auto status = osrm_typed->Match(*params_typed, *out);
-  std::cout << "size: " << params_typed->coordinates.size() << std::endl;
+  // std::cout << "size: " << params_typed->coordinates.size() << std::endl;
   if (status == osrm::Status::Ok)
   {
     auto &matchings = out->values["matchings"].get<osrm::json::Array>();
     auto &first_match = matchings.values.at(0).get<osrm::json::Object>();
     const auto confidence = first_match.values["confidence"].get<osrm::json::Number>().value;
-    std::cout << "confidence" << confidence << std::endl;
+    // std::cout << "confidence" << confidence << std::endl;
     return reinterpret_cast<osrmc_match_response_t>(out);
   }
   *error = new osrmc_error{"service request failed"};
@@ -579,6 +579,7 @@ void osrmc_match_get_nodes(osrmc_match_response_t response, double *node_arr, os
   auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
   auto &matchings = response_typed->values["matchings"].get<osrm::json::Array>().values;
   int counter = 0;
+  std::set<int> nodeSet;
   for (const auto &matching : matchings)
   {
     const auto &matching_object = matching.get<osrm::json::Object>();
@@ -589,18 +590,26 @@ void osrmc_match_get_nodes(osrmc_match_response_t response, double *node_arr, os
       const auto &annotation = leg_object.values.at("annotation").get<osrm::json::Object>();
       const auto &nodes = annotation.values.at("nodes").get<osrm::json::Array>().values;
       for(const auto &node: nodes) {
-        node_arr[counter] = node.get<osrm::json::Number>().value;
-        counter = counter + 1;
+        // if(nodeSet.contains(node.get<osrm::json::Number>().value))
+        auto search = nodeSet.find(node.get<osrm::json::Number>().value);
+        if (search != nodeSet.end()) {
+            // std::cout << "Found " << (*search) << '\n';
+        } else {
+            // std::cout << "Not found\n";
+            node_arr[counter] = node.get<osrm::json::Number>().value;
+            counter = counter + 1;
+        }
+        
       }
     }
   }
-  std::cout <<"-------------------"<<std::endl;
-  for (int i = 0; i < counter; i++)
-  {
-    std::cout<<std::fixed<<node_arr[i] << std::endl;
-  }
+  // std::cout <<"-------------------"<<std::endl;
+  // for (int i = 0; i < counter; i++)
+  // {
+  //   std::cout<<std::fixed<<node_arr[i] << std::endl;
+  // }
   
-  std::cout<<"Count " << counter << std::endl;
+  // std::cout<<"Count " << counter << std::endl;
 
 }
 catch (const std::exception &e)
@@ -628,7 +637,7 @@ int osrmc_match_get_node_count(osrmc_match_response_t response, osrmc_error_t *e
       }
     }
   }
-  std::cout<<"Count " << counter << std::endl;
+  // std::cout<<"Count " << counter << std::endl;
   return counter;
 }
 catch (const std::exception &e)

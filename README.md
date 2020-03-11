@@ -162,8 +162,16 @@ make
 sudo make install
 sudo ldconfig
 make clean
+```
 
 ```
+make  && sudo make install && sudo ldconfig && make clean
+
+```
+
+
+
+
 
 #### Check for .so file
 

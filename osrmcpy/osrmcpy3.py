@@ -257,7 +257,7 @@ def scoped_nearest(osrm, params):
 
 Coordinate = namedtuple('Coordinate', 'id longitude latitude')
 Route = namedtuple('Route', 'distance duration geometry')
-Match = namedtuple('Match', 'first')
+Match = namedtuple('Match', 'nodes node_count')
 Table = list
 
 
@@ -280,7 +280,7 @@ class OSRM:
 
     def match(self, coordinates) :
         with scoped_match_params() as params:
-            print(params)
+            # print(params)
             for coordinate in coordinates:
                 lib.osrmc_params_add_coordinate(params, coordinate.longitude, coordinate.latitude, c.byref(osrmc_error()))
             with scoped_match(self.osrm, params) as match:
@@ -289,10 +289,11 @@ class OSRM:
                     # nearest_coord = (c.c_float * 2)()
                     # lib.osrmc_match_get_nodes(match, nearest_coord, c.byref(osrmc_error()))
                     node_count = lib.osrmc_match_get_node_count(match, c.byref(osrmc_error()))
-                    print("py: node_count:", node_count)
                     nodes = (c.c_double * node_count)()
                     lib.osrmc_match_get_nodes(match, nodes, c.byref(osrmc_error()))
-                    print('{:f}'.format(nodes[0]))
+                    # for i in range(node_count):
+                    #     print('{:f}'.format(nodes[i]))
+                    return Match(nodes=nodes, node_count=node_count)
                 else:
                     print("error")
 
