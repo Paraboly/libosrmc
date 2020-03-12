@@ -48,7 +48,7 @@ def main():
 
         # df_geoms = pd.read_csv(csv_path, names=['id', 'distance', 'duration', 'polyline_geom'])
         # print(df_geoms.head(25))
-        print(match.node_count)
+        print(match.nodes)
 
 
     else:
