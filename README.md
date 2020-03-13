@@ -197,3 +197,12 @@ python3 -m pip install .
 LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/local/lib python3 osrm_python3_route.py /mnt/fd68f224-e30e-4ea0-8bd8-7f2a4c4d5ab0/nurgasemetey-environment/geo-data/turkey2/turkey-latest.osrm
 ```
 
+
+
+### Publish package
+
+```
+python setup.py sdist
+twine upload dist/* 
+```
+
