@@ -180,11 +180,18 @@ lib.osrmc_match_get_nodes.argtypes = [c.c_void_p,c.c_void_p, c.c_void_p]
 lib.osrmc_match_get_nodes.errcheck = osrmc_error_errcheck
 
 lib.osrmc_match_get_node_count.restype = c.c_int
-lib.osrmc_match_get_node_count.argtypes = [c.c_void_p, c.c_void_p]
+lib.osrmc_match_get_node_count.argtypes = [c.c_void_p, c.POINTER(c.c_double), c.c_void_p]
 lib.osrmc_match_get_node_count.errcheck = osrmc_error_errcheck
+
+# Generic Param Handling
+lib.osrmc_match_params_add_timestamp.restype = None
+lib.osrmc_match_params_add_timestamp.argtypes = [c.c_void_p, c.c_long, c.c_void_p]
+lib.osrmc_match_params_add_timestamp.errcheck = osrmc_error_errcheck
 
 lib.osrmc_match_params_destruct.restype = None
 lib.osrmc_match_params_destruct.argtypes = [c.c_void_p]
+
+
 
 # Python Library Interface
 @contextmanager
@@ -257,7 +264,7 @@ def scoped_nearest(osrm, params):
 
 Coordinate = namedtuple('Coordinate', 'id longitude latitude')
 Route = namedtuple('Route', 'distance duration geometry')
-Match = namedtuple('Match', 'nodes')
+Match = namedtuple('Match', 'nodes duration distance')
 Table = list
 
 
@@ -278,23 +285,34 @@ class OSRM:
         if self.config:
             lib.osrmc_config_destruct(self.config)
 
-    def match(self, coordinates) :
+    def match(self, coordinates, timestamps) :
+        """
+        Matches coordinates to map network
+        :param coordinates: List of coordinates
+        :param timestamps: List of Unix timestamps in seconds
+        :return: Match object
+        """
         with scoped_match_params() as params:
             # print(params)
             for coordinate in coordinates:
                 lib.osrmc_params_add_coordinate(params, coordinate.longitude, coordinate.latitude, c.byref(osrmc_error()))
+            for timestamp in timestamps:
+                lib.osrmc_match_params_add_timestamp(params, timestamp, c.byref(osrmc_error()))
             with scoped_match(self.osrm, params) as match:
                 if match:
 
                     # nearest_coord = (c.c_float * 2)()
+                    distance = c.c_double()
                     # lib.osrmc_match_get_nodes(match, nearest_coord, c.byref(osrmc_error()))
-                    node_count = lib.osrmc_match_get_node_count(match, c.byref(osrmc_error()))
+                    node_count = lib.osrmc_match_get_node_count(match, distance, c.byref(osrmc_error()))
+                    print("python distance", distance.value)
                     node_pointer_array = (c.c_double * node_count)()
                     lib.osrmc_match_get_nodes(match, node_pointer_array, c.byref(osrmc_error()))
                     # for i in range(node_count):
                     #     print('{:f}'.format(nodes[i]))
                     nodes = [node_pointer_array[i] for i in range(node_count)]
-                    return Match(nodes=nodes)
+                    duration = timestamps[-1] - timestamps[0]
+                    return Match(nodes=nodes, distance=distance.value, duration=duration)
                 else:
                     print("error")
 

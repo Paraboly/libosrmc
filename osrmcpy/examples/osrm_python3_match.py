@@ -37,7 +37,14 @@ def main():
         Coordinate(id=None, longitude=29.074406, latitude=40.991718)
     ]
 
-    match = osrm.match(coordinates)
+    match = osrm.match(coordinates, [1584203149,
+                                     1584203159,
+                                     1584203162,
+                                     1584203165,
+                                     1584203169,
+                                     1584203172,
+                                     1584203175,
+                                     1584203179])
 
     if match:
         print("matched")
@@ -49,6 +56,8 @@ def main():
         # df_geoms = pd.read_csv(csv_path, names=['id', 'distance', 'duration', 'polyline_geom'])
         # print(df_geoms.head(25))
         print(match.nodes)
+        print(match.duration)
+        print(match.distance)
 
 
     else:

@@ -618,25 +618,38 @@ catch (const std::exception &e)
 }
 
 //osrmc_nearest_response_t response, float* coords, osrmc_error_t* error
-int osrmc_match_get_node_count(osrmc_match_response_t response, osrmc_error_t *error) try
+int osrmc_match_get_node_count(osrmc_match_response_t response, double &distance, osrmc_error_t *error) try
 {
   auto *response_typed = reinterpret_cast<osrm::json::Object *>(response);
   auto &matchings = response_typed->values["matchings"].get<osrm::json::Array>().values;
   int counter = 0;
+  double distanceSum = 0.0;
+  std::set<int> nodeSet;
   for (const auto &matching : matchings)
   {
     const auto &matching_object = matching.get<osrm::json::Object>();
     const auto &legs = matching_object.values.at("legs").get<osrm::json::Array>().values;
+    const auto matching_distance =  matching_object.values.at("distance").get<osrm::json::Number>().value;
+    std::cout << "match distance: " << matching_distance << std::endl;
+    distanceSum = distanceSum + matching_distance;
     for (const auto &leg : legs)
     {
       const auto &leg_object = leg.get<osrm::json::Object>();
       const auto &annotation = leg_object.values.at("annotation").get<osrm::json::Object>();
       const auto &nodes = annotation.values.at("nodes").get<osrm::json::Array>().values;
       for(const auto &node: nodes) {
-        counter = counter + 1;
+        auto search = nodeSet.find(node.get<osrm::json::Number>().value);
+        if (search != nodeSet.end()) {
+            // std::cout << "Found " << (*search) << '\n';  
+        } else {
+            // std::cout << "Not found\n";
+            counter = counter + 1;
+        }
       }
     }
   }
+  distance = distanceSum;
+  std::cout <<"distance after setting: " << distance << std::endl;
   // std::cout<<"Count " << counter << std::endl;
   return counter;
 }

@@ -268,7 +268,7 @@ OSRMC_API osrmc_match_response_t osrmc_match(osrmc_osrm_t osrm, osrmc_match_para
 OSRMC_API void osrmc_match_params_destruct(osrmc_match_params_t params);
 OSRMC_API void osrmc_match_params_add_timestamp(osrmc_match_params_t params, unsigned timestamp, osrmc_error_t* error);
 OSRMC_API void osrmc_match_get_nodes(osrmc_match_response_t response, double *nodes, osrmc_error_t* error);
-OSRMC_API int osrmc_match_get_node_count(osrmc_match_response_t response, osrmc_error_t* error);
+OSRMC_API int osrmc_match_get_node_count(osrmc_match_response_t response, double &distance, osrmc_error_t* error);
 #ifdef __cplusplus
 }
 #endif
