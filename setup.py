@@ -2,7 +2,7 @@ from distutils.core import setup
 
 setup(
     name='osrmcpy',
-    version='0.2',
+    version='0.3',
     python_requires='>=3.5',
     url='https://github.com/Paraboly/libosrmc',
     author='Geographica',
