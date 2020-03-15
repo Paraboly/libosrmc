@@ -293,7 +293,7 @@ class OSRM:
         :return: Match object
         """
         with scoped_match_params() as params:
-            print(params)
+            # print(params)
             for coordinate in coordinates:
                 lib.osrmc_params_add_coordinate(params, coordinate.longitude, coordinate.latitude, c.byref(osrmc_error()))
             for timestamp in timestamps:
@@ -305,7 +305,7 @@ class OSRM:
                     distance = c.c_double()
                     # lib.osrmc_match_get_nodes(match, nearest_coord, c.byref(osrmc_error()))
                     node_count = lib.osrmc_match_get_node_count(match, distance, c.byref(osrmc_error()))
-                    print("python distance", distance.value)
+                    # print("python distance", distance.value)
                     node_pointer_array = (c.c_double * node_count)()
                     lib.osrmc_match_get_nodes(match, node_pointer_array, c.byref(osrmc_error()))
                     # for i in range(node_count):
