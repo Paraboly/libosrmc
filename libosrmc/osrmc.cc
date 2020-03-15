@@ -593,9 +593,10 @@ void osrmc_match_get_nodes(osrmc_match_response_t response, double *node_arr, os
         // if(nodeSet.contains(node.get<osrm::json::Number>().value))
         auto search = nodeSet.find(node.get<osrm::json::Number>().value);
         if (search != nodeSet.end()) {
-            // std::cout << "Found " << (*search) << '\n';
+            std::cout << "Found " << (*search) << '\n';
         } else {
-            // std::cout << "Not found\n";
+            std::cout << "Not found\n";
+            nodeSet.insert(node.get<osrm::json::Number>().value);
             node_arr[counter] = node.get<osrm::json::Number>().value;
             counter = counter + 1;
         }
@@ -643,6 +644,7 @@ int osrmc_match_get_node_count(osrmc_match_response_t response, double &distance
             // std::cout << "Found " << (*search) << '\n';  
         } else {
             // std::cout << "Not found\n";
+            nodeSet.insert(node.get<osrm::json::Number>().value);
             counter = counter + 1;
         }
       }
